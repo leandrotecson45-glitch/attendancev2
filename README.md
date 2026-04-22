@@ -61,27 +61,31 @@ function save(type){
 const name=document.getElementById("name").value;
 if(!name) return alert("Enter name");
 
-gps((lat,lon)=>{
+navigator.geolocation.getCurrentPosition(async (pos)=>{
 
 const data={
-name,type,
+name,
+type,
 time:new Date().toLocaleString(),
-lat,lon
+lat:pos.coords.latitude,
+lon:pos.coords.longitude
 };
 
-// SAVE FIREBASE
-db.collection("attendance").add(data);
+try {
 
-L.marker([lat,lon]).addTo(map)
-.bindPopup(name+" "+type);
+await db.collection("attendance").add(data);
 
-map.setView([lat,lon],17);
+// 🔥 PROOF NA NASESEND
+alert("✅ SENT TO FIREBASE");
+
+console.log("SAVED:", data);
+
+} catch(e){
+alert("❌ FIREBASE ERROR: "+e.message);
+}
 
 });
 
 }
-
-</script>
-
 </body>
 </html>
