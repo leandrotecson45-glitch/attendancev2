@@ -20,7 +20,7 @@ button{padding:10px;border:none;color:white;}
 <body>
 
 <div class="top">
-<input id="name" placeholder="Field Supervisor Name">
+<input id="name" placeholder="Name">
 <button class="in" onclick="save('TIME IN')">TIME IN</button>
 <button class="out" onclick="save('TIME OUT')">TIME OUT</button>
 </div>
@@ -35,7 +35,7 @@ button{padding:10px;border:none;color:white;}
 
 // FIREBASE
 const firebaseConfig = {
-apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+ apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -55,7 +55,7 @@ cb(p.coords.latitude,p.coords.longitude);
 });
 }
 
-// SAVE FUNCTION
+// 🔥 SAVE = ALWAYS NEW RECORD (NO OVERWRITE)
 function save(type){
 
 const name=document.getElementById("name").value;
@@ -67,13 +67,13 @@ const data={
 name,
 type,
 time:new Date().toLocaleString(),
-lat,lon
+lat,
+lon
 };
 
-// SAVE TO FIREBASE
+// 🔥 ALWAYS ADD NEW DOCUMENT (IMPORTANT FIX)
 db.collection("attendance").add(data);
 
-// 🔥 PIN COLOR
 let color = type==="TIME IN" ? "blue" : "red";
 
 L.circleMarker([lat,lon],{
