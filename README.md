@@ -1,52 +1,30 @@
-
+<!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Field Attendance</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field App</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#0b1220;
-color:white;
-}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
 
-/* HEADER */
-.header{
-padding:12px;
-display:flex;
-flex-direction:column;
-gap:10px;
-background:#0f172a;
-}
-
-/* INPUT STYLE */
+.header{padding:15px;background:#0f172a;}
 input{
-padding:14px;
-border-radius:12px;
+width:100%;
+padding:12px;
+border-radius:10px;
 border:none;
-font-size:16px;
-outline:none;
+margin-bottom:10px;
 }
 
-/* BUTTONS */
-.btns{
-display:flex;
-gap:10px;
-}
+.buttons{display:flex;gap:10px;}
 
 button{
 flex:1;
-padding:16px;
+padding:15px;
 border:none;
-border-radius:14px;
-font-size:16px;
+border-radius:12px;
 font-weight:bold;
 color:white;
 }
@@ -54,51 +32,31 @@ color:white;
 .in{background:#22c55e;}
 .out{background:#ef4444;}
 
-/* MAP FULL SCREEN */
-#map{
-height:75vh;
-border-top-left-radius:20px;
-border-top-right-radius:20px;
-overflow:hidden;
-}
-
-/* STATUS */
-.status{
-text-align:center;
-font-size:12px;
-opacity:0.7;
-}
-
+#map{height:70vh;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
+<input id="name" placeholder="Employee Name">
 
-<div class="status">📍 Field Attendance System</div>
-
-<input id="name" placeholder="Enter your name">
-
-<div class="btns">
-<button class="in" onclick="save('TIME IN')">TIME IN</button>
-<button class="out" onclick="save('TIME OUT')">TIME OUT</button>
+<div class="buttons">
+<button class="in" onclick="save('IN')">TIME IN</button>
+<button class="out" onclick="save('OUT')">TIME OUT</button>
 </div>
-
 </div>
 
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 
-// FIREBASE (same)
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -106,55 +64,42 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// MAP
 const map = L.map('map').setView([15.5,120.9],13);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// GPS
-function gps(cb){
-navigator.geolocation.getCurrentPosition(p=>{
-cb(p.coords.latitude,p.coords.longitude);
-});
-}
-
-// SAVE
 function save(type){
 
 const name=document.getElementById("name").value;
-if(!name){
-alert("⚠️ Enter name");
-return;
-}
+if(!name) return alert("Enter name");
 
-gps((lat,lon)=>{
+navigator.geolocation.getCurrentPosition(pos=>{
+
+const now = new Date();
 
 const data={
 name,
 type,
-time:new Date().toLocaleString(),
-lat,lon
+lat:pos.coords.latitude,
+lon:pos.coords.longitude,
+timestamp: now.getTime(),
+date: now.toLocaleDateString(),
+time: now.toLocaleTimeString()
 };
 
-// FIREBASE SAVE
 db.collection("attendance").add(data);
 
-// UI PIN
-let color = type==="TIME IN" ? "#22c55e" : "#ef4444";
+let color = type==="IN" ? "green" : "red";
 
-L.circleMarker([lat,lon],{
+L.circleMarker([data.lat,data.lon],{
 radius:10,
 color:color,
 fillColor:color,
 fillOpacity:0.9
 }).addTo(map)
-.bindPopup(`
-<b>${name}</b><br>
-${type}<br>
-${data.time}
-`);
+.bindPopup(`${name}<br>${type}<br>${data.time}`);
 
-map.setView([lat,lon],17);
+map.setView([data.lat,data.lon],17);
 
 });
 
