@@ -36,9 +36,9 @@ button{padding:10px;color:white;border:none;}
 <script>
 
 const firebaseConfig = {
-  apiKey: "PASTE",
-  authDomain: "PASTE",
-  projectId: "PASTE"
+  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+  authDomain: "attendance1-697b2.firebaseapp.com",
+  projectId: "attendance1-697b2"
 };
 
 firebase.initializeApp(firebaseConfig);
