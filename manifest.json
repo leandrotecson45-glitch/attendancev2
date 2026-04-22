@@ -8,7 +8,12 @@
   "icons": [
     {
       "src": "https://i.postimg.cc/nhv82KJ5/ostrom-climate-solutions-inc-logo.png",
-      "sizes": "192x192",
+      "sizes": "200x200",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.postimg.cc/nhv82KJ5/ostrom-climate-solutions-inc-logo.png",
+      "sizes": "200x200",
       "type": "image/png"
     }
   ]
