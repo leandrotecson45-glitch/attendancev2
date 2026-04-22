@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Attendance App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Field Attendance</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
@@ -10,22 +10,81 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;}
-.top{display:flex;padding:10px;gap:5px;background:#0f172a;}
-input{flex:1;padding:10px;}
-button{padding:10px;border:none;color:white;}
+body{
+margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
+}
+
+/* HEADER */
+.header{
+padding:12px;
+display:flex;
+flex-direction:column;
+gap:10px;
+background:#0f172a;
+}
+
+/* INPUT STYLE */
+input{
+padding:14px;
+border-radius:12px;
+border:none;
+font-size:16px;
+outline:none;
+}
+
+/* BUTTONS */
+.btns{
+display:flex;
+gap:10px;
+}
+
+button{
+flex:1;
+padding:16px;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:bold;
+color:white;
+}
+
 .in{background:#22c55e;}
 .out{background:#ef4444;}
-#map{height:90vh;}
+
+/* MAP FULL SCREEN */
+#map{
+height:75vh;
+border-top-left-radius:20px;
+border-top-right-radius:20px;
+overflow:hidden;
+}
+
+/* STATUS */
+.status{
+text-align:center;
+font-size:12px;
+opacity:0.7;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="top">
-<input id="name" placeholder="Name">
-<button class="in" onclick="save('TIME IN')">IN</button>
-<button class="out" onclick="save('TIME OUT')">OUT</button>
+<div class="header">
+
+<div class="status">📍 Field Attendance System</div>
+
+<input id="name" placeholder="Enter your name">
+
+<div class="btns">
+<button class="in" onclick="save('TIME IN')">TIME IN</button>
+<button class="out" onclick="save('TIME OUT')">TIME OUT</button>
+</div>
+
 </div>
 
 <div id="map"></div>
@@ -37,9 +96,9 @@ button{padding:10px;border:none;color:white;}
 
 <script>
 
-// 🔥 FIREBASE CONFIG (PALITAN MO)
+// FIREBASE (same)
 const firebaseConfig = {
-apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+ apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -63,7 +122,10 @@ cb(p.coords.latitude,p.coords.longitude);
 function save(type){
 
 const name=document.getElementById("name").value;
-if(!name) return alert("Enter name");
+if(!name){
+alert("⚠️ Enter name");
+return;
+}
 
 gps((lat,lon)=>{
 
@@ -74,10 +136,11 @@ time:new Date().toLocaleString(),
 lat,lon
 };
 
-// FIREBASE SAVE (NO OVERWRITE)
+// FIREBASE SAVE
 db.collection("attendance").add(data);
 
-let color = type==="TIME IN" ? "blue" : "red";
+// UI PIN
+let color = type==="TIME IN" ? "#22c55e" : "#ef4444";
 
 L.circleMarker([lat,lon],{
 radius:10,
@@ -95,11 +158,6 @@ map.setView([lat,lon],17);
 
 });
 
-}
-
-// 🔥 SERVICE WORKER REGISTER
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
 }
 
 </script>
