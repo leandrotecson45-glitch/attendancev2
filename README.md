@@ -8,15 +8,12 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-
 .header{padding:10px;background:#0f172a;}
 input{width:100%;padding:12px;margin-bottom:8px;border-radius:10px;border:none;}
-
 .buttons{display:flex;gap:5px;}
 button{flex:1;padding:12px;border:none;border-radius:10px;color:white;font-weight:bold;}
 .in{background:#22c55e;}
 .out{background:#ef4444;}
-
 #map{height:60vh;}
 </style>
 </head>
@@ -42,21 +39,24 @@ button{flex:1;padding:12px;border:none;border-radius:10px;color:white;font-weigh
 
 <script>
 
+// 🔥 PASTE MO TAMANG CONFIG
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2",
   storageBucket: "attendance1-697b2.firebasestorage.app"
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+// MAP
 const map = L.map('map').setView([15.5,120.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// KM CALCULATION
+// DISTANCE
 function distance(lat1, lon1, lat2, lon2){
 const R = 6371;
 let dLat = (lat2-lat1) * Math.PI/180;
@@ -66,68 +66,92 @@ let a = Math.sin(dLat/2)**2 +
 Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180) *
 Math.sin(dLon/2)**2;
 
-let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-return R*c;
+return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// SAVE FUNCTION
+// 🔥 MAIN FUNCTION (FIXED)
 async function save(type){
 
 const name=document.getElementById("name").value;
 const file=document.getElementById("photo").files[0];
 
-if(!name) return alert("Enter name");
+if(!name){
+alert("Enter name");
+return;
+}
+
+// 🔥 CHECK GPS
+if(!navigator.geolocation){
+alert("GPS not supported");
+return;
+}
 
 navigator.geolocation.getCurrentPosition(async pos=>{
+
+try{
 
 let lat=pos.coords.latitude;
 let lon=pos.coords.longitude;
 
 let photoURL="";
 
-// UPLOAD PHOTO
+// 🔥 SAFE PHOTO UPLOAD
 if(file){
+try{
 let ref = storage.ref("photos/"+Date.now()+".jpg");
 await ref.put(file);
 photoURL = await ref.getDownloadURL();
+}catch(e){
+console.log("Photo upload failed", e);
+}
 }
 
-// GET LAST RECORD
+// 🔥 GET LAST DATA
+let km=0;
+try{
 let last = await db.collection("attendance")
 .where("name","==",name)
 .orderBy("timestamp","desc")
 .limit(1).get();
 
-let km = 0;
-
 if(!last.empty){
 let prev = last.docs[0].data();
 km = distance(prev.lat, prev.lon, lat, lon);
 }
+}catch(e){
+console.log("KM calc error", e);
+}
 
+// 🔥 SAVE DATA
 const now = new Date();
 
-const data={
-name,type,lat,lon,
+await db.collection("attendance").add({
+name,
+type,
+lat,
+lon,
 photo:photoURL,
-km:km,
+km,
 timestamp: now.getTime(),
 date: now.toLocaleDateString(),
 time: now.toLocaleTimeString()
-};
+});
 
-await db.collection("attendance").add(data);
-
-// MAP PIN
+// 🔥 MAP
 L.marker([lat,lon]).addTo(map)
-.bindPopup(`
-<b>${name}</b><br>
-${type}<br>
-${data.time}
-`);
+.bindPopup(`${name}<br>${type}<br>${now.toLocaleTimeString()}`);
 
 map.setView([lat,lon],17);
 
+alert("✅ Saved successfully");
+
+}catch(err){
+console.error(err);
+alert("❌ Error saving data");
+}
+
+}, err=>{
+alert("❌ GPS error: enable location");
 });
 
 }
