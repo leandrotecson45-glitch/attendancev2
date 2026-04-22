@@ -1,30 +1,56 @@
-<!DOCTYPE html>
+
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Field App</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
+body{
+margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
+}
 
-.header{padding:15px;background:#0f172a;}
+/* HEADER */
+.header{
+padding:15px;
+background:#0f172a;
+position:sticky;
+top:0;
+z-index:1000;
+}
+
+.title{
+font-size:14px;
+opacity:0.7;
+margin-bottom:5px;
+}
+
+/* INPUT */
 input{
 width:100%;
-padding:12px;
-border-radius:10px;
+padding:14px;
+border-radius:12px;
 border:none;
+font-size:16px;
 margin-bottom:10px;
 }
 
-.buttons{display:flex;gap:10px;}
+/* BUTTONS */
+.buttons{
+display:flex;
+gap:10px;
+}
 
 button{
 flex:1;
-padding:15px;
+padding:16px;
 border:none;
-border-radius:12px;
+border-radius:14px;
+font-size:16px;
 font-weight:bold;
 color:white;
 }
@@ -32,14 +58,20 @@ color:white;
 .in{background:#22c55e;}
 .out{background:#ef4444;}
 
-#map{height:70vh;}
+/* MAP */
+#map{
+height:75vh;
+border-top-left-radius:20px;
+border-top-right-radius:20px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<input id="name" placeholder="Employee Name">
+<div class="title">📍 Field Attendance</div>
+<input id="name" placeholder="Enter Employee Name">
 
 <div class="buttons">
 <button class="in" onclick="save('IN')">TIME IN</button>
@@ -89,7 +121,7 @@ time: now.toLocaleTimeString()
 
 db.collection("attendance").add(data);
 
-let color = type==="IN" ? "green" : "red";
+let color = type==="IN" ? "#22c55e" : "#ef4444";
 
 L.circleMarker([data.lat,data.lon],{
 radius:10,
