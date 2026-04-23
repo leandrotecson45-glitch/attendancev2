@@ -8,77 +8,35 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-
 .app{display:flex;flex-direction:column;height:100dvh;}
 
-.header{
-padding:12px;
-background:#0f172a;
-}
-
-input{
+.header{padding:12px;background:#0f172a;}
+input, textarea{
 width:100%;
 padding:12px;
 border-radius:10px;
 border:none;
 margin-bottom:8px;
+font-size:14px;
 }
+
+textarea{resize:none;height:60px;}
 
 .status{font-size:13px;opacity:0.7;}
-
 #map{flex:1;}
 
-.controls{
-display:flex;
-gap:10px;
-padding:10px;
-background:#0f172a;
-}
-
-button{
-flex:1;
-padding:16px;
-border:none;
-border-radius:12px;
-font-weight:bold;
-color:white;
-}
-
+.controls{display:flex;gap:10px;padding:10px;background:#0f172a;}
+button{flex:1;padding:16px;border:none;border-radius:12px;font-weight:bold;color:white;}
 .in{background:#22c55e;}
 .out{background:#ef4444;}
-
-/* 🔥 POPUP DESIGN */
-.popup-box{
-font-size:13px;
-max-height:180px;
-overflow-y:auto;
-}
-
-.popup-header{
-font-weight:bold;
-margin-bottom:6px;
-}
 
 .popup-item{
 padding:8px;
 margin-bottom:6px;
 background:#1f2937;
 border-radius:8px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+font-size:13px;
 }
-
-.tag{
-font-size:11px;
-padding:2px 6px;
-border-radius:6px;
-}
-
-.inTag{background:#22c55e;}
-.outTag{background:#ef4444;}
-.autoTag{background:#3b82f6;}
-
 </style>
 </head>
 
@@ -88,7 +46,11 @@ border-radius:6px;
 
 <div class="header">
 <h3>Field Tracker</h3>
+
 <input id="name" placeholder="Enter name">
+
+<textarea id="purpose" placeholder="Enter purpose / activity (e.g. Site visit, inspection)"></textarea>
+
 <div class="status" id="status">📡 Starting...</div>
 </div>
 
@@ -109,7 +71,7 @@ border-radius:6px;
 
 // FIREBASE
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -123,7 +85,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let lat=null, lon=null;
 let myMarker;
-let markers=[];
 
 // GPS
 navigator.geolocation.watchPosition(pos=>{
@@ -138,97 +99,20 @@ myMarker = L.marker([lat,lon]).addTo(map);
 map.setView([lat,lon],17);
 });
 
-// 🔥 REALTIME WITH BEAUTIFUL POPUP
-db.collection("attendance").orderBy("timestamp")
-.onSnapshot(snapshot=>{
-
-markers.forEach(m=>map.removeLayer(m));
-markers=[];
-
-let grouped = {};
-
-// GROUP BY LOCATION
-snapshot.forEach(doc=>{
-let d = doc.data();
-let key = d.lat.toFixed(5)+","+d.lon.toFixed(5);
-
-if(!grouped[key]) grouped[key]=[];
-grouped[key].push(d);
-});
-
-// CREATE MARKERS
-Object.keys(grouped).forEach(key=>{
-
-let logs = grouped[key];
-let lat = logs[0].lat;
-let lon = logs[0].lon;
-
-// 🔥 POPUP UI
-let html = `<div class="popup-box">`;
-html += `<div class="popup-header">📍 ${logs.length} Records</div>`;
-
-logs.forEach(l=>{
-
-let tagClass = "autoTag";
-if(l.type==="IN") tagClass="inTag";
-if(l.type==="OUT") tagClass="outTag";
-
-html += `
-<div class="popup-item">
-<div>
-<b>${l.name}</b><br>
-<small>${l.time}</small>
-</div>
-<div class="tag ${tagClass}">
-${l.type}
-</div>
-</div>
-`;
-
-});
-
-html += `</div>`;
-
-// LABEL
-let iconHTML = `
-<div style="
-background:#111827;
-padding:6px 10px;
-border-radius:20px;
-font-size:12px;
-color:white;">
-📍 ${logs.length}
-</div>
-`;
-
-let icon = L.divIcon({
-html:iconHTML,
-className:"",
-iconSize:[60,30]
-});
-
-let marker = L.marker([lat,lon],{icon})
-.addTo(map)
-.bindPopup(html);
-
-markers.push(marker);
-
-});
-
-});
-
 // SAVE
 async function save(type){
 
-const name=document.getElementById("name").value;
+const name = document.getElementById("name").value;
+const purpose = document.getElementById("purpose").value;
 
-if(!name || !lat){
-alert("Enter name / wait GPS");
+if(!name || !purpose || !lat){
+alert("Complete name, purpose, and wait GPS");
 return;
 }
 
 await db.collection("attendance").add({
 name,
+purpose,
 type,
 lat,
 lon,
@@ -236,7 +120,7 @@ time:new Date().toLocaleTimeString(),
 timestamp:Date.now()
 });
 
-alert(type+" saved");
+alert(type + " saved");
 
 }
 
