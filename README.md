@@ -7,34 +7,13 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-:root{
---bg:#0b1220;
---card:#0f172a;
---green:#22c55e;
---red:#ef4444;
---text:#fff;
-}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
 
-body{
-margin:0;
-font-family:Arial;
-background:var(--bg);
-color:var(--text);
-overflow:hidden;
-}
+.app{display:flex;flex-direction:column;height:100dvh;}
 
-/* FULL HEIGHT FIX */
-.app{
-display:flex;
-flex-direction:column;
-height:100dvh;
-}
-
-/* HEADER */
 .header{
 padding:12px;
-background:var(--card);
-padding-top:calc(12px + env(safe-area-inset-top));
+background:#0f172a;
 }
 
 input{
@@ -43,49 +22,62 @@ padding:12px;
 border-radius:10px;
 border:none;
 margin-bottom:8px;
-font-size:15px;
 }
 
-.status{
-font-size:13px;
-opacity:0.7;
-}
+.status{font-size:13px;opacity:0.7;}
 
-/* MAP AUTO FIT */
-#map{
-flex:1;
-}
+#map{flex:1;}
 
-/* CONTROLS */
 .controls{
 display:flex;
 gap:10px;
 padding:10px;
-background:var(--card);
-padding-bottom:calc(10px + env(safe-area-inset-bottom));
+background:#0f172a;
 }
 
 button{
 flex:1;
-padding:18px;
+padding:16px;
 border:none;
-border-radius:14px;
-font-size:16px;
+border-radius:12px;
 font-weight:bold;
 color:white;
 }
 
-.in{background:var(--green);}
-.out{background:var(--red);}
+.in{background:#22c55e;}
+.out{background:#ef4444;}
 
-/* POPUP STYLE */
-.popup-item{
-padding:6px;
-margin-bottom:5px;
-background:#1f2937;
-border-radius:6px;
+/* 🔥 POPUP DESIGN */
+.popup-box{
 font-size:13px;
+max-height:180px;
+overflow-y:auto;
 }
+
+.popup-header{
+font-weight:bold;
+margin-bottom:6px;
+}
+
+.popup-item{
+padding:8px;
+margin-bottom:6px;
+background:#1f2937;
+border-radius:8px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.tag{
+font-size:11px;
+padding:2px 6px;
+border-radius:6px;
+}
+
+.inTag{background:#22c55e;}
+.outTag{background:#ef4444;}
+.autoTag{background:#3b82f6;}
 
 </style>
 </head>
@@ -126,7 +118,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // MAP
-const map = L.map('map',{zoomControl:false}).setView([15.5,120.9],15);
+const map = L.map('map').setView([15.5,120.9],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let lat=null, lon=null;
@@ -135,22 +127,18 @@ let markers=[];
 
 // GPS
 navigator.geolocation.watchPosition(pos=>{
-
 lat = pos.coords.latitude;
 lon = pos.coords.longitude;
 
-document.getElementById("status").innerText = "📍 GPS Ready";
+document.getElementById("status").innerText="📍 GPS Ready";
 
 if(myMarker) map.removeLayer(myMarker);
 myMarker = L.marker([lat,lon]).addTo(map);
 
 map.setView([lat,lon],17);
-
-},()=>{
-document.getElementById("status").innerText = "❌ Enable GPS";
 });
 
-// REALTIME PINS
+// 🔥 REALTIME WITH BEAUTIFUL POPUP
 db.collection("attendance").orderBy("timestamp")
 .onSnapshot(snapshot=>{
 
@@ -159,31 +147,49 @@ markers=[];
 
 let grouped = {};
 
+// GROUP BY LOCATION
 snapshot.forEach(doc=>{
 let d = doc.data();
-
 let key = d.lat.toFixed(5)+","+d.lon.toFixed(5);
+
 if(!grouped[key]) grouped[key]=[];
 grouped[key].push(d);
 });
 
+// CREATE MARKERS
 Object.keys(grouped).forEach(key=>{
 
 let logs = grouped[key];
 let lat = logs[0].lat;
 let lon = logs[0].lon;
 
-let html = "";
+// 🔥 POPUP UI
+let html = `<div class="popup-box">`;
+html += `<div class="popup-header">📍 ${logs.length} Records</div>`;
 
 logs.forEach(l=>{
+
+let tagClass = "autoTag";
+if(l.type==="IN") tagClass="inTag";
+if(l.type==="OUT") tagClass="outTag";
+
 html += `
 <div class="popup-item">
+<div>
 <b>${l.name}</b><br>
-${l.type} - ${l.time}
+<small>${l.time}</small>
+</div>
+<div class="tag ${tagClass}">
+${l.type}
+</div>
 </div>
 `;
+
 });
 
+html += `</div>`;
+
+// LABEL
 let iconHTML = `
 <div style="
 background:#111827;
@@ -214,7 +220,7 @@ markers.push(marker);
 // SAVE
 async function save(type){
 
-const name = document.getElementById("name").value;
+const name=document.getElementById("name").value;
 
 if(!name || !lat){
 alert("Enter name / wait GPS");
@@ -230,7 +236,7 @@ time:new Date().toLocaleTimeString(),
 timestamp:Date.now()
 });
 
-alert(type + " saved");
+alert(type+" saved");
 
 }
 
