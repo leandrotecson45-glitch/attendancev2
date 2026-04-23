@@ -1,59 +1,103 @@
 
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Field Tracker</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
+:root{
+--bg:#0b1220;
+--card:#0f172a;
+--green:#22c55e;
+--red:#ef4444;
+--text:#fff;
+}
 
-.header{padding:12px;background:#0f172a;}
-input{width:100%;padding:12px;border-radius:10px;border:none;margin-bottom:8px;}
+body{
+margin:0;
+font-family:Arial;
+background:var(--bg);
+color:var(--text);
+overflow:hidden;
+}
 
-.status{font-size:13px;color:#94a3b8;}
+/* FULL HEIGHT FIX */
+.app{
+display:flex;
+flex-direction:column;
+height:100dvh;
+}
 
-#map{height:60vh;}
+/* HEADER */
+.header{
+padding:12px;
+background:var(--card);
+padding-top:calc(12px + env(safe-area-inset-top));
+}
 
+input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+margin-bottom:8px;
+font-size:15px;
+}
+
+.status{
+font-size:13px;
+opacity:0.7;
+}
+
+/* MAP AUTO FIT */
+#map{
+flex:1;
+}
+
+/* CONTROLS */
 .controls{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
 display:flex;
 gap:10px;
 padding:10px;
-background:#0f172a;
+background:var(--card);
+padding-bottom:calc(10px + env(safe-area-inset-bottom));
 }
 
 button{
 flex:1;
-padding:16px;
+padding:18px;
 border:none;
-border-radius:12px;
+border-radius:14px;
+font-size:16px;
 font-weight:bold;
 color:white;
 }
 
-.in{background:#22c55e;}
-.out{background:#ef4444;}
+.in{background:var(--green);}
+.out{background:var(--red);}
 
+/* POPUP STYLE */
 .popup-item{
 padding:6px;
 margin-bottom:5px;
 background:#1f2937;
 border-radius:6px;
+font-size:13px;
 }
+
 </style>
 </head>
 
 <body>
 
+<div class="app">
+
 <div class="header">
 <h3>Field Tracker</h3>
 <input id="name" placeholder="Enter name">
-<div class="status" id="status">📡 Initializing...</div>
+<div class="status" id="status">📡 Starting...</div>
 </div>
 
 <div id="map"></div>
@@ -63,15 +107,17 @@ border-radius:6px;
 <button class="out" onclick="save('OUT')">TIME OUT</button>
 </div>
 
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 
-// 🔥 FIREBASE CONFIG
+// FIREBASE
 const firebaseConfig = {
-apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+ apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -80,14 +126,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // MAP
-const map = L.map('map').setView([15.5,120.9],15);
+const map = L.map('map',{zoomControl:false}).setView([15.5,120.9],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let lat=null, lon=null;
 let myMarker;
 let markers=[];
 
-// 📡 GPS
+// GPS
 navigator.geolocation.watchPosition(pos=>{
 
 lat = pos.coords.latitude;
@@ -95,23 +141,22 @@ lon = pos.coords.longitude;
 
 document.getElementById("status").innerText = "📍 GPS Ready";
 
-// USER LOCATION
 if(myMarker) map.removeLayer(myMarker);
-myMarker = L.marker([lat,lon]).addTo(map).bindPopup("📍 You are here");
+myMarker = L.marker([lat,lon]).addTo(map);
 
 map.setView([lat,lon],17);
 
+},()=>{
+document.getElementById("status").innerText = "❌ Enable GPS";
 });
 
-// 🔄 REALTIME PINS (LIKE QA)
+// REALTIME PINS
 db.collection("attendance").orderBy("timestamp")
 .onSnapshot(snapshot=>{
 
-// clear old markers
 markers.forEach(m=>map.removeLayer(m));
 markers=[];
 
-// group by location
 let grouped = {};
 
 snapshot.forEach(doc=>{
@@ -122,14 +167,12 @@ if(!grouped[key]) grouped[key]=[];
 grouped[key].push(d);
 });
 
-// create markers
 Object.keys(grouped).forEach(key=>{
 
 let logs = grouped[key];
 let lat = logs[0].lat;
 let lon = logs[0].lon;
 
-// popup content (LAHAT)
 let html = "";
 
 logs.forEach(l=>{
@@ -141,27 +184,24 @@ ${l.type} - ${l.time}
 `;
 });
 
-// label count
 let iconHTML = `
 <div style="
 background:#111827;
 padding:6px 10px;
 border-radius:20px;
 font-size:12px;
-font-weight:bold;
-color:white;
-">
+color:white;">
 📍 ${logs.length}
 </div>
 `;
 
-let customIcon = L.divIcon({
-html: iconHTML,
-className: "",
+let icon = L.divIcon({
+html:iconHTML,
+className:"",
 iconSize:[60,30]
 });
 
-let marker = L.marker([lat,lon],{icon:customIcon})
+let marker = L.marker([lat,lon],{icon})
 .addTo(map)
 .bindPopup(html);
 
