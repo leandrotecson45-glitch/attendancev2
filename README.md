@@ -7,30 +7,135 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-.header{padding:12px;background:#0f172a;}
-input{width:100%;padding:12px;border-radius:10px;border:none;margin-bottom:8px;}
-.status{font-size:13px;color:#94a3b8;}
-#map{height:60vh;}
-.controls{position:fixed;bottom:0;width:100%;display:flex;gap:10px;padding:10px;background:#0f172a;}
-button{flex:1;padding:16px;border:none;border-radius:12px;color:white;font-weight:bold;}
-.in{background:#22c55e;}
-.out{background:#ef4444;}
+:root{
+--bg:#0b1220;
+--card:#0f172a;
+--green:#22c55e;
+--red:#ef4444;
+--text:#fff;
+--muted:#94a3b8;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:var(--bg);
+color:var(--text);
+}
+
+/* LAYOUT */
+.container{
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+/* HEADER */
+.header{
+padding:12px;
+background:var(--card);
+}
+
+input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+margin-bottom:8px;
+font-size:15px;
+}
+
+.status{
+font-size:13px;
+color:var(--muted);
+}
+
+/* MAP */
+#map{
+flex:1;
+}
+
+/* BUTTONS MOBILE */
+.controls{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+display:flex;
+gap:10px;
+padding:10px;
+background:rgba(15,23,42,0.95);
+}
+
+button{
+flex:1;
+padding:16px;
+border:none;
+border-radius:12px;
+font-size:15px;
+font-weight:bold;
+color:white;
+}
+
+.in{background:var(--green);}
+.out{background:var(--red);}
+
+/* DESKTOP MODE */
+@media (min-width: 768px){
+
+.container{
+flex-direction:row;
+}
+
+.sidebar{
+width:300px;
+background:var(--card);
+padding:15px;
+}
+
+#map{
+height:100vh;
+}
+
+.controls{
+position:static;
+flex-direction:column;
+padding:0;
+margin-top:10px;
+}
+
+button{
+width:100%;
+}
+
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<input id="name" placeholder="Enter name">
-<div class="status" id="status">Initializing...</div>
-</div>
+<div class="container">
 
-<div id="map"></div>
+<!-- SIDEBAR / HEADER -->
+<div class="header sidebar">
+
+<h3>Field Tracker</h3>
+
+<input id="name" placeholder="Enter name">
+
+<div class="status" id="status">📡 Initializing...</div>
 
 <div class="controls">
 <button class="in" onclick="manualSave('IN')">TIME IN</button>
 <button class="out" onclick="manualSave('OUT')">TIME OUT</button>
+</div>
+
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -39,7 +144,7 @@ button{flex:1;padding:16px;border:none;border-radius:12px;color:white;font-weigh
 
 <script>
 
-// 🔥 FIREBASE
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
@@ -56,7 +161,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 let lat=null, lon=null;
 let marker;
 
-// 📡 GPS WATCH
+// GPS
 navigator.geolocation.watchPosition(pos=>{
 
 lat = pos.coords.latitude;
@@ -75,68 +180,7 @@ document.getElementById("status").innerText =
 "❌ Enable GPS";
 });
 
-// 💾 OFFLINE STORAGE
-function saveLocal(data){
-let logs = JSON.parse(localStorage.getItem("offline") || "[]");
-logs.push(data);
-localStorage.setItem("offline", JSON.stringify(logs));
-}
-
-// 🔄 SYNC FUNCTION
-async function syncData(){
-
-let logs = JSON.parse(localStorage.getItem("offline") || "[]");
-
-if(logs.length === 0) return;
-
-document.getElementById("status").innerText =
-"🔄 Syncing " + logs.length;
-
-for(let d of logs){
-await db.collection("attendance").add(d);
-}
-
-localStorage.removeItem("offline");
-
-document.getElementById("status").innerText =
-"✅ Synced";
-
-}
-
-// 🌐 CHECK INTERNET
-setInterval(()=>{
-if(navigator.onLine){
-syncData();
-}
-},5000);
-
-// 🟢 AUTO TRACK EVERY 30s
-setInterval(()=>{
-
-if(!lat) return;
-
-const name = document.getElementById("name").value;
-if(!name) return;
-
-let data = {
-name,
-type:"AUTO",
-lat,
-lon,
-time:new Date().toLocaleTimeString(),
-timestamp:Date.now()
-};
-
-// SAVE ONLINE OR OFFLINE
-if(navigator.onLine){
-db.collection("attendance").add(data);
-}else{
-saveLocal(data);
-}
-
-},30000);
-
-// 🧑‍💼 MANUAL
+// SAVE
 async function manualSave(type){
 
 const name = document.getElementById("name").value;
@@ -146,22 +190,16 @@ alert("Missing name/GPS");
 return;
 }
 
-let data = {
+await db.collection("attendance").add({
 name,
 type,
 lat,
 lon,
 time:new Date().toLocaleTimeString(),
 timestamp:Date.now()
-};
+});
 
-if(navigator.onLine){
-await db.collection("attendance").add(data);
-}else{
-saveLocal(data);
-}
-
-alert("Saved");
+alert(type + " saved");
 
 }
 
