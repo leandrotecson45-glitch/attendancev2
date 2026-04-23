@@ -22,7 +22,6 @@ button{flex:1;padding:15px;border:none;border-radius:12px;color:white;font-weigh
 
 <div class="header">
 <input id="name" placeholder="Employee Name">
-<input type="file" id="photo" accept="image/*" capture="environment">
 
 <div class="buttons">
 <button class="in" onclick="save('IN')">TIME IN</button>
@@ -35,32 +34,24 @@ button{flex:1;padding:15px;border:none;border-radius:12px;color:white;font-weigh
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
 
-// 🔥 CONFIG
 const firebaseConfig = {
  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
-  projectId: "attendance1-697b2",
-  storageBucket: "attendance1-697b2.firebasestorage.app"
+  projectId: "attendance1-697b2"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-// MAP
 const map = L.map('map').setView([15.5,120.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// SAVE FUNCTION
-async function save(type){
+function save(type){
 
 const name = document.getElementById("name").value;
-const file = document.getElementById("photo").files[0];
 
 if(!name){
 alert("Enter name");
@@ -69,54 +60,29 @@ return;
 
 navigator.geolocation.getCurrentPosition(async pos=>{
 
-let lat = pos.coords.latitude;
-let lon = pos.coords.longitude;
-
-let photoURL = "";
-
-// 🔥 SAFE UPLOAD (hindi sisira kahit mag fail)
-if(file){
-try{
-let ref = storage.ref("photos/"+Date.now()+".jpg");
-await ref.put(file);
-photoURL = await ref.getDownloadURL();
-}catch(e){
-console.log("Photo upload failed");
-}
-}
-
+const lat = pos.coords.latitude;
+const lon = pos.coords.longitude;
 const now = new Date();
-
-try{
 
 await db.collection("attendance").add({
 name,
 type,
 lat,
 lon,
-photo: photoURL,
 time: now.toLocaleTimeString(),
 date: now.toLocaleDateString(),
 timestamp: now.getTime()
 });
 
 L.marker([lat,lon]).addTo(map)
-.bindPopup(`
-<b>${name}</b><br>
-${type}<br>
-${now.toLocaleTimeString()}
-`);
+.bindPopup(`<b>${name}</b><br>${type}<br>${now.toLocaleTimeString()}`);
 
 map.setView([lat,lon],17);
 
-alert("✅ SUCCESS");
-
-}catch(e){
-alert("❌ SAVE ERROR");
-}
+alert("✅ Saved");
 
 }, err=>{
-alert("❌ GPS ERROR");
+alert("❌ Enable GPS");
 });
 
 }
