@@ -1,104 +1,36 @@
-<!DOCTYPE html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Attendance</title>
+<title>Field Tracker</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#0b1220;
-color:white;
-}
-
-.header{
-padding:15px;
-background:#0f172a;
-}
-
-h2{
-margin:0 0 10px 0;
-}
-
-input{
-width:100%;
-padding:14px;
-border-radius:12px;
-border:none;
-margin-bottom:10px;
-font-size:16px;
-}
-
-.time{
-font-size:14px;
-margin-bottom:10px;
-opacity:0.8;
-}
-
-.gps{
-font-size:13px;
-margin-bottom:10px;
-}
-
-.buttons{
-display:flex;
-gap:10px;
-}
-
-button{
-flex:1;
-padding:18px;
-border:none;
-border-radius:14px;
-font-size:16px;
-font-weight:bold;
-color:white;
-}
-
-.in{
-background:#22c55e;
-}
-
-.out{
-background:#ef4444;
-}
-
-#map{
-height:65vh;
-}
-
-.footer{
-padding:10px;
-text-align:center;
-font-size:12px;
-opacity:0.6;
-}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
+.header{padding:12px;background:#0f172a;}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-bottom:8px;}
+.status{font-size:13px;color:#94a3b8;}
+#map{height:60vh;}
+.controls{position:fixed;bottom:0;width:100%;display:flex;gap:10px;padding:10px;background:#0f172a;}
+button{flex:1;padding:16px;border:none;border-radius:12px;color:white;font-weight:bold;}
+.in{background:#22c55e;}
+.out{background:#ef4444;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<h2>Field Attendance</h2>
-
-<input id="name" placeholder="Enter your name">
-
-<div class="time" id="time"></div>
-<div class="gps" id="gps">📡 Checking GPS...</div>
-
-<div class="buttons">
-<button class="in" onclick="save('IN')">TIME IN</button>
-<button class="out" onclick="save('OUT')">TIME OUT</button>
-</div>
+<input id="name" placeholder="Enter name">
+<div class="status" id="status">Initializing...</div>
 </div>
 
 <div id="map"></div>
 
-<div class="footer">
-Company Field System
+<div class="controls">
+<button class="in" onclick="manualSave('IN')">TIME IN</button>
+<button class="out" onclick="manualSave('OUT')">TIME OUT</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -107,9 +39,9 @@ Company Field System
 
 <script>
 
-// 🔥 FIREBASE CONFIG (PASTE MO)
+// 🔥 FIREBASE
 const firebaseConfig = {
-apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+ apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -118,71 +50,118 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // MAP
-const map = L.map('map').setView([15.5,120.9],13);
+const map = L.map('map').setView([15.5,120.9],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-let currentLat = null;
-let currentLon = null;
+let lat=null, lon=null;
+let marker;
 
-// 🕒 LIVE TIME
-setInterval(()=>{
-const now = new Date();
-document.getElementById("time").innerText =
-"🕒 " + now.toLocaleString();
-},1000);
-
-// 📡 GPS TRACK
+// 📡 GPS WATCH
 navigator.geolocation.watchPosition(pos=>{
 
-currentLat = pos.coords.latitude;
-currentLon = pos.coords.longitude;
+lat = pos.coords.latitude;
+lon = pos.coords.longitude;
 
-document.getElementById("gps").innerText =
+document.getElementById("status").innerText =
 "📍 GPS Ready";
 
-map.setView([currentLat,currentLon],16);
+if(marker) map.removeLayer(marker);
+marker = L.marker([lat,lon]).addTo(map);
 
-L.marker([currentLat,currentLon]).addTo(map);
+map.setView([lat,lon],17);
 
-}, err=>{
-document.getElementById("gps").innerText =
-"❌ GPS Error - Enable Location";
+},()=>{
+document.getElementById("status").innerText =
+"❌ Enable GPS";
 });
 
-// SAVE FUNCTION
-async function save(type){
+// 💾 OFFLINE STORAGE
+function saveLocal(data){
+let logs = JSON.parse(localStorage.getItem("offline") || "[]");
+logs.push(data);
+localStorage.setItem("offline", JSON.stringify(logs));
+}
+
+// 🔄 SYNC FUNCTION
+async function syncData(){
+
+let logs = JSON.parse(localStorage.getItem("offline") || "[]");
+
+if(logs.length === 0) return;
+
+document.getElementById("status").innerText =
+"🔄 Syncing " + logs.length;
+
+for(let d of logs){
+await db.collection("attendance").add(d);
+}
+
+localStorage.removeItem("offline");
+
+document.getElementById("status").innerText =
+"✅ Synced";
+
+}
+
+// 🌐 CHECK INTERNET
+setInterval(()=>{
+if(navigator.onLine){
+syncData();
+}
+},5000);
+
+// 🟢 AUTO TRACK EVERY 30s
+setInterval(()=>{
+
+if(!lat) return;
+
+const name = document.getElementById("name").value;
+if(!name) return;
+
+let data = {
+name,
+type:"AUTO",
+lat,
+lon,
+time:new Date().toLocaleTimeString(),
+timestamp:Date.now()
+};
+
+// SAVE ONLINE OR OFFLINE
+if(navigator.onLine){
+db.collection("attendance").add(data);
+}else{
+saveLocal(data);
+}
+
+},30000);
+
+// 🧑‍💼 MANUAL
+async function manualSave(type){
 
 const name = document.getElementById("name").value;
 
-if(!name){
-alert("Enter your name");
+if(!name || !lat){
+alert("Missing name/GPS");
 return;
 }
 
-if(!currentLat){
-alert("Waiting for GPS...");
-return;
-}
-
-try{
-
-const now = new Date();
-
-await db.collection("attendance").add({
+let data = {
 name,
 type,
-lat: currentLat,
-lon: currentLon,
-time: now.toLocaleTimeString(),
-date: now.toLocaleDateString(),
-timestamp: now.getTime()
-});
+lat,
+lon,
+time:new Date().toLocaleTimeString(),
+timestamp:Date.now()
+};
 
-alert("✅ " + type + " Saved");
-
-}catch(e){
-alert("❌ Error: " + e.message);
+if(navigator.onLine){
+await db.collection("attendance").add(data);
+}else{
+saveLocal(data);
 }
+
+alert("Saved");
 
 }
 
