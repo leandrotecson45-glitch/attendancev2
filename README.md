@@ -7,21 +7,87 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-.header{padding:15px;background:#0f172a;}
-input{width:100%;padding:14px;border-radius:10px;border:none;margin-bottom:10px;}
-.buttons{display:flex;gap:10px;}
-button{flex:1;padding:15px;border:none;border-radius:12px;color:white;font-weight:bold;}
-.in{background:#22c55e;}
-.out{background:#ef4444;}
-#map{height:70vh;}
+body{
+margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
+}
+
+.header{
+padding:15px;
+background:#0f172a;
+}
+
+h2{
+margin:0 0 10px 0;
+}
+
+input{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:none;
+margin-bottom:10px;
+font-size:16px;
+}
+
+.time{
+font-size:14px;
+margin-bottom:10px;
+opacity:0.8;
+}
+
+.gps{
+font-size:13px;
+margin-bottom:10px;
+}
+
+.buttons{
+display:flex;
+gap:10px;
+}
+
+button{
+flex:1;
+padding:18px;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:bold;
+color:white;
+}
+
+.in{
+background:#22c55e;
+}
+
+.out{
+background:#ef4444;
+}
+
+#map{
+height:65vh;
+}
+
+.footer{
+padding:10px;
+text-align:center;
+font-size:12px;
+opacity:0.6;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<input id="name" placeholder="Employee Name">
+<h2>Field Attendance</h2>
+
+<input id="name" placeholder="Enter your name">
+
+<div class="time" id="time"></div>
+<div class="gps" id="gps">📡 Checking GPS...</div>
 
 <div class="buttons">
 <button class="in" onclick="save('IN')">TIME IN</button>
@@ -31,14 +97,19 @@ button{flex:1;padding:15px;border:none;border-radius:12px;color:white;font-weigh
 
 <div id="map"></div>
 
+<div class="footer">
+Company Field System
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 
+// 🔥 FIREBASE CONFIG (PASTE MO)
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -46,44 +117,72 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// MAP
 const map = L.map('map').setView([15.5,120.9],13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-function save(type){
+let currentLat = null;
+let currentLon = null;
+
+// 🕒 LIVE TIME
+setInterval(()=>{
+const now = new Date();
+document.getElementById("time").innerText =
+"🕒 " + now.toLocaleString();
+},1000);
+
+// 📡 GPS TRACK
+navigator.geolocation.watchPosition(pos=>{
+
+currentLat = pos.coords.latitude;
+currentLon = pos.coords.longitude;
+
+document.getElementById("gps").innerText =
+"📍 GPS Ready";
+
+map.setView([currentLat,currentLon],16);
+
+L.marker([currentLat,currentLon]).addTo(map);
+
+}, err=>{
+document.getElementById("gps").innerText =
+"❌ GPS Error - Enable Location";
+});
+
+// SAVE FUNCTION
+async function save(type){
 
 const name = document.getElementById("name").value;
 
 if(!name){
-alert("Enter name");
+alert("Enter your name");
 return;
 }
 
-navigator.geolocation.getCurrentPosition(async pos=>{
+if(!currentLat){
+alert("Waiting for GPS...");
+return;
+}
 
-const lat = pos.coords.latitude;
-const lon = pos.coords.longitude;
+try{
+
 const now = new Date();
 
 await db.collection("attendance").add({
 name,
 type,
-lat,
-lon,
+lat: currentLat,
+lon: currentLon,
 time: now.toLocaleTimeString(),
 date: now.toLocaleDateString(),
 timestamp: now.getTime()
 });
 
-L.marker([lat,lon]).addTo(map)
-.bindPopup(`<b>${name}</b><br>${type}<br>${now.toLocaleTimeString()}`);
+alert("✅ " + type + " Saved");
 
-map.setView([lat,lon],17);
-
-alert("✅ Saved");
-
-}, err=>{
-alert("❌ Enable GPS");
-});
+}catch(e){
+alert("❌ Error: " + e.message);
+}
 
 }
 
