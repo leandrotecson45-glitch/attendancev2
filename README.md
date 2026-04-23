@@ -7,55 +7,15 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-:root{
---bg:#0b1220;
---card:#0f172a;
---green:#22c55e;
---red:#ef4444;
---text:#fff;
---muted:#94a3b8;
-}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
 
-body{
-margin:0;
-font-family:Arial;
-background:var(--bg);
-color:var(--text);
-}
+.header{padding:12px;background:#0f172a;}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-bottom:8px;}
 
-/* LAYOUT */
-.container{
-display:flex;
-flex-direction:column;
-height:100vh;
-}
+.status{font-size:13px;color:#94a3b8;}
 
-/* HEADER */
-.header{
-padding:12px;
-background:var(--card);
-}
+#map{height:60vh;}
 
-input{
-width:100%;
-padding:12px;
-border-radius:10px;
-border:none;
-margin-bottom:8px;
-font-size:15px;
-}
-
-.status{
-font-size:13px;
-color:var(--muted);
-}
-
-/* MAP */
-#map{
-flex:1;
-}
-
-/* BUTTONS MOBILE */
 .controls{
 position:fixed;
 bottom:0;
@@ -64,7 +24,7 @@ right:0;
 display:flex;
 gap:10px;
 padding:10px;
-background:rgba(15,23,42,0.95);
+background:#0f172a;
 }
 
 button{
@@ -72,70 +32,35 @@ flex:1;
 padding:16px;
 border:none;
 border-radius:12px;
-font-size:15px;
 font-weight:bold;
 color:white;
 }
 
-.in{background:var(--green);}
-.out{background:var(--red);}
+.in{background:#22c55e;}
+.out{background:#ef4444;}
 
-/* DESKTOP MODE */
-@media (min-width: 768px){
-
-.container{
-flex-direction:row;
+.popup-item{
+padding:6px;
+margin-bottom:5px;
+background:#1f2937;
+border-radius:6px;
 }
-
-.sidebar{
-width:300px;
-background:var(--card);
-padding:15px;
-}
-
-#map{
-height:100vh;
-}
-
-.controls{
-position:static;
-flex-direction:column;
-padding:0;
-margin-top:10px;
-}
-
-button{
-width:100%;
-}
-
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<!-- SIDEBAR / HEADER -->
-<div class="header sidebar">
-
+<div class="header">
 <h3>Field Tracker</h3>
-
 <input id="name" placeholder="Enter name">
-
 <div class="status" id="status">📡 Initializing...</div>
-
-<div class="controls">
-<button class="in" onclick="manualSave('IN')">TIME IN</button>
-<button class="out" onclick="manualSave('OUT')">TIME OUT</button>
 </div>
 
-</div>
-
-<!-- MAP -->
 <div id="map"></div>
 
+<div class="controls">
+<button class="in" onclick="save('IN')">TIME IN</button>
+<button class="out" onclick="save('OUT')">TIME OUT</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -146,7 +71,7 @@ width:100%;
 
 // 🔥 FIREBASE CONFIG
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -159,34 +84,100 @@ const map = L.map('map').setView([15.5,120.9],15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 let lat=null, lon=null;
-let marker;
+let myMarker;
+let markers=[];
 
-// GPS
+// 📡 GPS
 navigator.geolocation.watchPosition(pos=>{
 
 lat = pos.coords.latitude;
 lon = pos.coords.longitude;
 
-document.getElementById("status").innerText =
-"📍 GPS Ready";
+document.getElementById("status").innerText = "📍 GPS Ready";
 
-if(marker) map.removeLayer(marker);
-marker = L.marker([lat,lon]).addTo(map);
+// USER LOCATION
+if(myMarker) map.removeLayer(myMarker);
+myMarker = L.marker([lat,lon]).addTo(map).bindPopup("📍 You are here");
 
 map.setView([lat,lon],17);
 
-},()=>{
-document.getElementById("status").innerText =
-"❌ Enable GPS";
+});
+
+// 🔄 REALTIME PINS (LIKE QA)
+db.collection("attendance").orderBy("timestamp")
+.onSnapshot(snapshot=>{
+
+// clear old markers
+markers.forEach(m=>map.removeLayer(m));
+markers=[];
+
+// group by location
+let grouped = {};
+
+snapshot.forEach(doc=>{
+let d = doc.data();
+
+let key = d.lat.toFixed(5)+","+d.lon.toFixed(5);
+if(!grouped[key]) grouped[key]=[];
+grouped[key].push(d);
+});
+
+// create markers
+Object.keys(grouped).forEach(key=>{
+
+let logs = grouped[key];
+let lat = logs[0].lat;
+let lon = logs[0].lon;
+
+// popup content (LAHAT)
+let html = "";
+
+logs.forEach(l=>{
+html += `
+<div class="popup-item">
+<b>${l.name}</b><br>
+${l.type} - ${l.time}
+</div>
+`;
+});
+
+// label count
+let iconHTML = `
+<div style="
+background:#111827;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:bold;
+color:white;
+">
+📍 ${logs.length}
+</div>
+`;
+
+let customIcon = L.divIcon({
+html: iconHTML,
+className: "",
+iconSize:[60,30]
+});
+
+let marker = L.marker([lat,lon],{icon:customIcon})
+.addTo(map)
+.bindPopup(html);
+
+markers.push(marker);
+
+});
+
 });
 
 // SAVE
-async function manualSave(type){
+async function save(type){
 
 const name = document.getElementById("name").value;
 
 if(!name || !lat){
-alert("Missing name/GPS");
+alert("Enter name / wait GPS");
 return;
 }
 
