@@ -1,6 +1,20 @@
 
 <html>
 <head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1.0'>
+<title>Field Portal</title>
+<style>body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}input,select,textarea,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none}button{background:#16a34a;color:#fff;font-weight:bold}</style>
+</head>
+<body>
+<h2>Field Portal</h2>
+<select><option>Select Employee</option><option>Juan</option><option>Pedro</option></select>
+<textarea placeholder='Purpose'></textarea>
+<button>TIME IN</button>
+<button style='background:#dc2626'>TIME OUT</button>
+<p> <!DOCTYPE html>
+<html>
+<head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Field Portal</title>
 
@@ -300,5 +314,7 @@ markers.push(marker);
 
 </script>
 
+</body>
+</html></p>
 </body>
 </html>
