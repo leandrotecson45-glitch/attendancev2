@@ -208,10 +208,17 @@ padding:13px;
 <option>Mark Gabriel Marcelo</option>
 <option>Mariel Macapulay</option>
 <option>Allen Rodolfo</option>
-<option>Mark Anthony Tolentino</option>
-<option>Supervisor 1</option>
+<option>Mark Tolentino</option>
+<option>Bego Patricio</option>
   <option>Mark Sabatin</option>
-  <option>juan dela cruz</option>
+    <option>Gian Carlo Claus</option>
+    <option>Arjay Hulinganga</option>
+    <option>June Joven</option>
+    <option>Ken Tintero</option>
+    <option>Michael Cababag</option>
+    <option>Paul Navarrete</option>
+    <option>Angelique Lei Balete</option>
+    <option>June Agatin</option>
 </select>
 
 <textarea
