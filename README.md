@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>Field Portal</title>
+<title> FIELDSUPERVISOR ATTENDANCE</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -43,7 +43,7 @@ z-index:5;
 /* FORM PANEL */
 .panel{
 padding:12px;
-background:#1e293b;
+background:skyblue;
 display:flex;
 flex-direction:column;
 gap:10px;
@@ -82,11 +82,11 @@ color:#fff;
 }
 
 .in-btn{
-background:#16a34a;
+background:darkgreen;
 }
 
 .out-btn{
-background:#dc2626;
+background:darkred;
 }
 
 /* STATUS */
@@ -199,7 +199,7 @@ padding:13px;
 
 <div class="app">
 
-<header>📍 Field Portal</header>
+<header>FIELDSUPERVISOR ATTENDANCE</header>
 
 <div class="panel">
 
