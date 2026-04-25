@@ -1,18 +1,19 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Field Portal</title>
+<title>QA Dashboard</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, sans-serif;
+font-family:Arial,sans-serif;
 }
 
 body{
@@ -21,14 +22,34 @@ color:#fff;
 }
 
 header{
+background:#111827;
 padding:15px;
 text-align:center;
 font-size:22px;
 font-weight:bold;
-background:#111827;
 }
 
-.container{
+.topbar{
+padding:15px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+background:#1e293b;
+}
+
+select,input{
+padding:10px;
+border:none;
+border-radius:10px;
+font-size:14px;
+}
+
+#map{
+height:420px;
+width:100%;
+}
+
+.section{
 padding:15px;
 }
 
@@ -38,61 +59,6 @@ padding:15px;
 border-radius:14px;
 margin-bottom:15px;
 box-shadow:0 4px 10px rgba(0,0,0,.25);
-}
-
-label{
-display:block;
-margin-bottom:6px;
-font-size:14px;
-font-weight:bold;
-}
-
-select,input,textarea{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-outline:none;
-font-size:14px;
-margin-bottom:12px;
-}
-
-textarea{
-resize:none;
-height:70px;
-}
-
-button{
-width:100%;
-padding:14px;
-border:none;
-border-radius:10px;
-font-size:15px;
-font-weight:bold;
-color:#fff;
-cursor:pointer;
-margin-bottom:10px;
-}
-
-.btn-in{
-background:#16a34a;
-}
-
-.btn-out{
-background:#dc2626;
-}
-
-#map{
-height:420px;
-border-radius:14px;
-overflow:hidden;
-margin-top:10px;
-}
-
-.status{
-font-size:13px;
-color:#cbd5e1;
-margin-top:5px;
 }
 
 .pin-box{
@@ -106,11 +72,10 @@ border:1px solid #334155;
 }
 
 .popup-card{
-background:#111827;
+background:lightgray;
 padding:10px;
 border-radius:10px;
 margin-bottom:8px;
-color:#fff;
 font-size:13px;
 }
 
@@ -123,53 +88,50 @@ font-weight:bold;
 margin-top:6px;
 }
 
-.in{
-background:#16a34a;
-}
-
-.out{
-background:#dc2626;
-}
+.in{background:#16a34a;}
+.out{background:#dc2626;}
 
 .purpose{
 margin-top:8px;
 padding:8px;
-background:#1e293b;
+background:white;
 border-left:4px solid #38bdf8;
 border-radius:8px;
 font-size:12px;
+}
+
+canvas{
+background:#fff;
+border-radius:10px;
+padding:10px;
 }
 </style>
 </head>
 <body>
 
-<header>📍 Field Portal</header>
+<header>📊 QA Dashboard</header>
 
-<div class="container">
+<div class="topbar">
 
-<div class="card">
-
-<label>Select Employee</label>
-<select id="name">
-<option value="">Choose Employee</option>
-<option>Juan Dela Cruz</option>
-<option>Pedro Santos</option>
-<option>Maria Cruz</option>
-<option>Leandro Tecson</option>
-<option>Supervisor 1</option>
+<select id="employeeFilter">
+<option value="ALL">All Employees</option>
 </select>
 
-<label>Purpose</label>
-<textarea id="purpose" placeholder="Enter purpose here..."></textarea>
-
-<button class="btn-in" onclick="saveLog('IN')">🟢 TIME IN</button>
-<button class="btn-out" onclick="saveLog('OUT')">🔴 TIME OUT</button>
-
-<div class="status" id="status">Waiting for GPS...</div>
+<input type="date" id="dateFilter">
 
 </div>
 
 <div id="map"></div>
+
+<div class="section">
+
+<div class="card">
+<canvas id="typeChart"></canvas>
+</div>
+
+<div class="card">
+<canvas id="purposeChart"></canvas>
+</div>
 
 </div>
 
@@ -179,7 +141,9 @@ font-size:12px;
 
 <script>
 
+// ======================================
 // FIREBASE CONFIG
+// ======================================
 const firebaseConfig = {
  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
@@ -189,94 +153,142 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ======================================
 // MAP
-const map = L.map('map').setView([15.486,120.967],13);
+// ======================================
+const map = L.map("map").setView([15.486,120.967],13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{maxZoom:19}
+).addTo(map);
 
-let userLat = null;
-let userLng = null;
-let myMarker = null;
-let markers = [];
+let markers=[];
+let allLogs=[];
+let chart1=null;
+let chart2=null;
 
-// GPS WATCH
-navigator.geolocation.watchPosition(pos=>{
-
-userLat = pos.coords.latitude;
-userLng = pos.coords.longitude;
-
-document.getElementById("status").innerText =
-"GPS Ready";
-
-if(myMarker){
-map.removeLayer(myMarker);
-}
-
-myMarker = L.marker([userLat,userLng]).addTo(map)
-.bindPopup("You are here");
-
-map.setView([userLat,userLng],16);
-
-},err=>{
-document.getElementById("status").innerText =
-"Enable GPS Permission";
-});
-
-// SAVE LOG
-function saveLog(type){
-
-const name = document.getElementById("name").value;
-const purpose = document.getElementById("purpose").value.trim();
-
-if(!name){
-alert("Select employee name");
-return;
-}
-
-if(!purpose){
-alert("Enter purpose");
-return;
-}
-
-if(userLat===null){
-alert("Waiting for GPS");
-return;
-}
-
-db.collection("attendance").add({
-name:name,
-purpose:purpose,
-type:type,
-lat:userLat,
-lon:userLng,
-time:new Date().toLocaleTimeString(),
-timestamp:Date.now()
-})
-.then(()=>{
-alert(type + " saved");
-document.getElementById("purpose").value="";
-})
-.catch(err=>{
-alert("Error saving");
-});
-
-}
-
-// LIVE MARKERS
+// ======================================
+// LOAD DATA REALTIME
+// ======================================
 db.collection("attendance")
 .orderBy("timestamp")
 .onSnapshot(snapshot=>{
 
+allLogs=[];
+
+snapshot.forEach(doc=>{
+allLogs.push(doc.data());
+});
+
+// GET EMPLOYEE LIST FROM FIELD LOGS
+loadEmployeeFilter();
+
+renderAll();
+
+});
+
+// ======================================
+// FILTER EVENTS
+// ======================================
+document.getElementById("employeeFilter")
+.addEventListener("change",renderAll);
+
+document.getElementById("dateFilter")
+.addEventListener("change",renderAll);
+
+// ======================================
+// LOAD EMPLOYEE FILTER
+// ======================================
+function loadEmployeeFilter(){
+
+const select =
+document.getElementById("employeeFilter");
+
+let currentValue = select.value;
+
+let names =
+[...new Set(allLogs.map(x=>x.name))];
+
+select.innerHTML =
+'<option value="ALL">All Employees</option>';
+
+names.forEach(name=>{
+
+select.innerHTML +=
+`<option value="${name}">
+${name}
+</option>`;
+
+});
+
+// keep selected value
+if(names.includes(currentValue)){
+select.value = currentValue;
+}else{
+select.value = "ALL";
+}
+
+}
+
+// ======================================
+// GET FILTERED DATA
+// ======================================
+function getFiltered(){
+
+const emp =
+document.getElementById("employeeFilter").value;
+
+const date =
+document.getElementById("dateFilter").value;
+
+return allLogs.filter(item=>{
+
+let empOk =
+(emp==="ALL" || item.name===emp);
+
+let dateOk = true;
+
+if(date){
+
+let itemDate =
+new Date(item.timestamp)
+.toISOString()
+.split("T")[0];
+
+dateOk = itemDate===date;
+
+}
+
+return empOk && dateOk;
+
+});
+
+}
+
+// ======================================
+// RENDER ALL
+// ======================================
+function renderAll(){
+
+let data = getFiltered();
+
+renderMap(data);
+renderCharts(data);
+
+}
+
+// ======================================
+// MAP
+// ======================================
+function renderMap(data){
+
 markers.forEach(m=>map.removeLayer(m));
 markers=[];
 
-let grouped = {};
+let grouped={};
 
-snapshot.forEach(doc=>{
-
-let d = doc.data();
+data.forEach(d=>{
 
 let key =
 d.lat.toFixed(5)+","+d.lon.toFixed(5);
@@ -289,38 +301,46 @@ grouped[key].push(d);
 
 });
 
-// CREATE MARKERS
 Object.keys(grouped).forEach(key=>{
 
-let logs = grouped[key];
+let logs=grouped[key];
 
-let lat = logs[0].lat;
-let lon = logs[0].lon;
+let lat=logs[0].lat;
+let lon=logs[0].lon;
 
 logs.sort((a,b)=>b.timestamp-a.timestamp);
 
-let html = "";
+let html="";
 
 logs.forEach(l=>{
 
 html += `
 <div class="popup-card">
+
 <b>${l.name}</b><br>
 ${l.time}<br>
-<span class="tag ${l.type==='IN'?'in':'out'}">${l.type}</span>
-<div class="purpose">📌 ${l.purpose}</div>
+
+<span class="tag ${l.type==='IN'?'in':'out'}">
+${l.type}
+</span>
+
+<div class="purpose">
+📌 ${l.purpose || "No purpose"}
+</div>
+
 </div>
 `;
 
 });
 
-let icon = L.divIcon({
+let icon=L.divIcon({
 html:`<div class="pin-box">📍 ${logs.length}</div>`,
 className:"",
 iconSize:[60,30]
 });
 
-let marker = L.marker([lat,lon],{icon:icon})
+let marker=
+L.marker([lat,lon],{icon})
 .addTo(map)
 .bindPopup(html);
 
@@ -328,7 +348,66 @@ markers.push(marker);
 
 });
 
+}
+
+// ======================================
+// CHARTS
+// ======================================
+function renderCharts(data){
+
+let inCount=0;
+let outCount=0;
+let purposeCount={};
+
+data.forEach(d=>{
+
+if(d.type==="IN") inCount++;
+if(d.type==="OUT") outCount++;
+
+let p = d.purpose || "None";
+
+if(!purposeCount[p]){
+purposeCount[p]=0;
+}
+
+purposeCount[p]++;
+
 });
+
+// BAR
+if(chart1) chart1.destroy();
+
+chart1 =
+new Chart(
+document.getElementById("typeChart"),
+{
+type:"bar",
+data:{
+labels:["IN","OUT"],
+datasets:[{
+label:"Logs",
+data:[inCount,outCount]
+}]
+}
+});
+
+// PIE
+if(chart2) chart2.destroy();
+
+chart2 =
+new Chart(
+document.getElementById("purposeChart"),
+{
+type:"pie",
+data:{
+labels:Object.keys(purposeCount),
+datasets:[{
+data:Object.values(purposeCount)
+}]
+}
+});
+
+}
 
 </script>
 </body>
