@@ -205,10 +205,10 @@ padding:13px;
 
 <select id="name">
 <option value="">Select Employee</option>
-<option>Juan Dela Cruz</option>
-<option>Pedro Santos</option>
-<option>Maria Cruz</option>
-<option>Leandro Tecson</option>
+<option>Mark Gabriel Marcelo</option>
+<option>Mariel Macapulay</option>
+<option>Allen Rodolfo</option>
+<option>Mark Anthony Tolentino</option>
 <option>Supervisor 1</option>
 </select>
 
