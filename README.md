@@ -210,6 +210,8 @@ padding:13px;
 <option>Allen Rodolfo</option>
 <option>Mark Anthony Tolentino</option>
 <option>Supervisor 1</option>
+  <option>Mark Sabatin</option>
+  <option>juan dela cruz</option>
 </select>
 
 <textarea
