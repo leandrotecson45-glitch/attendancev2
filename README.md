@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>Field Portal</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -12,89 +12,96 @@
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, sans-serif;
+font-family:Arial,sans-serif;
 }
 
-body{
+html,body{
+height:100%;
+overflow:hidden;
 background:#0f172a;
 color:#fff;
 }
 
+/* APP */
+.app{
+height:100dvh;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
 header{
-padding:15px;
+padding:14px;
 text-align:center;
-font-size:22px;
-font-weight:bold;
+font-size:20px;
+font-weight:700;
 background:#111827;
+box-shadow:0 4px 12px rgba(0,0,0,.25);
+z-index:5;
 }
 
-.container{
-padding:15px;
-}
-
-.card{
+/* FORM PANEL */
+.panel{
+padding:12px;
 background:#1e293b;
-padding:15px;
-border-radius:14px;
-margin-bottom:15px;
-box-shadow:0 4px 10px rgba(0,0,0,.25);
+display:flex;
+flex-direction:column;
+gap:10px;
+z-index:5;
 }
 
-label{
-display:block;
-margin-bottom:6px;
-font-size:14px;
-font-weight:bold;
-}
-
-select,input,textarea{
+select,
+textarea{
 width:100%;
 padding:12px;
 border:none;
-border-radius:10px;
+border-radius:12px;
+font-size:16px;
 outline:none;
-font-size:14px;
-margin-bottom:12px;
 }
 
 textarea{
 resize:none;
-height:70px;
+height:74px;
+}
+
+/* BUTTONS */
+.row{
+display:flex;
+gap:10px;
 }
 
 button{
-width:100%;
+flex:1;
 padding:14px;
 border:none;
-border-radius:10px;
+border-radius:12px;
 font-size:15px;
-font-weight:bold;
+font-weight:700;
 color:#fff;
-cursor:pointer;
-margin-bottom:10px;
 }
 
-.btn-in{
+.in-btn{
 background:#16a34a;
 }
 
-.btn-out{
+.out-btn{
 background:#dc2626;
 }
 
-#map{
-height:420px;
-border-radius:14px;
-overflow:hidden;
-margin-top:10px;
-}
-
+/* STATUS */
 .status{
 font-size:13px;
 color:#cbd5e1;
-margin-top:5px;
 }
 
+/* MAP */
+#map{
+flex:1;
+width:100%;
+}
+
+/* PINS */
 .pin-box{
 background:#111827;
 padding:6px 10px;
@@ -105,53 +112,99 @@ color:#fff;
 border:1px solid #334155;
 }
 
+/* POPUP */
+.leaflet-popup-content-wrapper{
+background:#0f172a;
+color:#fff;
+border-radius:16px;
+}
+
+.leaflet-popup-tip{
+background:#0f172a;
+}
+
+.leaflet-popup-content{
+margin:10px;
+max-height:260px;
+overflow-y:auto;
+width:260px !important;
+}
+
 .popup-card{
 background:#111827;
 padding:10px;
-border-radius:10px;
+border-radius:12px;
 margin-bottom:8px;
-color:#fff;
-font-size:13px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:8px;
 }
 
 .tag{
-display:inline-block;
 padding:4px 8px;
-border-radius:8px;
+border-radius:999px;
 font-size:11px;
-font-weight:bold;
-margin-top:6px;
+font-weight:700;
 }
 
-.in{
-background:#16a34a;
+.tag-in{
+background:#14532d;
+color:#86efac;
 }
 
-.out{
-background:#dc2626;
+.tag-out{
+background:#7f1d1d;
+color:#fca5a5;
+}
+
+.time{
+font-size:11px;
+color:#94a3b8;
+margin-top:3px;
 }
 
 .purpose{
 margin-top:8px;
 padding:8px;
-background:#1e293b;
 border-left:4px solid #38bdf8;
-border-radius:8px;
+background:#0f172a;
+border-radius:10px;
 font-size:12px;
+}
+
+/* MOBILE SAFE SPACE */
+@media(max-width:600px){
+header{
+font-size:18px;
+padding:12px;
+}
+
+select,
+textarea{
+font-size:16px;
+}
+
+button{
+font-size:14px;
+padding:13px;
+}
 }
 </style>
 </head>
 <body>
 
+<div class="app">
+
 <header>📍 Field Portal</header>
 
-<div class="container">
+<div class="panel">
 
-<div class="card">
-
-<label>Select Employee</label>
 <select id="name">
-<option value="">Choose Employee</option>
+<option value="">Select Employee</option>
 <option>Juan Dela Cruz</option>
 <option>Pedro Santos</option>
 <option>Maria Cruz</option>
@@ -159,13 +212,19 @@ font-size:12px;
 <option>Supervisor 1</option>
 </select>
 
-<label>Purpose</label>
-<textarea id="purpose" placeholder="Enter purpose here..."></textarea>
+<textarea
+id="purpose"
+placeholder="Enter purpose here..."
+></textarea>
 
-<button class="btn-in" onclick="saveLog('IN')">🟢 TIME IN</button>
-<button class="btn-out" onclick="saveLog('OUT')">🔴 TIME OUT</button>
+<div class="row">
+<button class="in-btn" onclick="saveLog('IN')">TIME IN</button>
+<button class="out-btn" onclick="saveLog('OUT')">TIME OUT</button>
+</div>
 
-<div class="status" id="status">Waiting for GPS...</div>
+<div class="status" id="status">
+Waiting GPS...
+</div>
 
 </div>
 
@@ -179,9 +238,9 @@ font-size:12px;
 
 <script>
 
-// FIREBASE CONFIG
+// FIREBASE
 const firebaseConfig = {
- apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
+apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
   projectId: "attendance1-697b2"
 };
@@ -190,48 +249,98 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // MAP
-const map = L.map('map').setView([15.486,120.967],13);
+const map = L.map("map").setView([15.486,120.967],13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-maxZoom:19
-}).addTo(map);
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{maxZoom:19}
+).addTo(map);
 
-let userLat = null;
-let userLng = null;
-let myMarker = null;
-let markers = [];
+let userLat=null;
+let userLng=null;
+let myMarker=null;
+let markers=[];
 
-// GPS WATCH
+// =====================================
+// AUTO ZOOM WHEN TYPING (PHONE KEYBOARD)
+// =====================================
+const purposeInput =
+document.getElementById("purpose");
+
+const nameInput =
+document.getElementById("name");
+
+function focusMode(){
+
+document.querySelector(".panel")
+.scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+
+setTimeout(()=>{
+map.invalidateSize();
+},400);
+
+}
+
+function normalMode(){
+
+setTimeout(()=>{
+map.invalidateSize();
+},500);
+
+}
+
+purposeInput.addEventListener("focus",focusMode);
+nameInput.addEventListener("focus",focusMode);
+
+purposeInput.addEventListener("blur",normalMode);
+nameInput.addEventListener("blur",normalMode);
+
+// =====================================
+// GPS
+// =====================================
 navigator.geolocation.watchPosition(pos=>{
 
 userLat = pos.coords.latitude;
 userLng = pos.coords.longitude;
 
-document.getElementById("status").innerText =
-"GPS Ready";
+document.getElementById("status")
+.innerText="📍 GPS Ready";
 
 if(myMarker){
 map.removeLayer(myMarker);
 }
 
-myMarker = L.marker([userLat,userLng]).addTo(map)
+myMarker =
+L.marker([userLat,userLng])
+.addTo(map)
 .bindPopup("You are here");
 
 map.setView([userLat,userLng],16);
 
 },err=>{
-document.getElementById("status").innerText =
-"Enable GPS Permission";
+
+document.getElementById("status")
+.innerText="Enable GPS Permission";
+
 });
 
-// SAVE LOG
+// =====================================
+// SAVE
+// =====================================
 function saveLog(type){
 
-const name = document.getElementById("name").value;
-const purpose = document.getElementById("purpose").value.trim();
+const name =
+document.getElementById("name").value;
+
+const purpose =
+document.getElementById("purpose")
+.value.trim();
 
 if(!name){
-alert("Select employee name");
+alert("Select employee");
 return;
 }
 
@@ -241,11 +350,12 @@ return;
 }
 
 if(userLat===null){
-alert("Waiting for GPS");
+alert("Waiting GPS");
 return;
 }
 
-db.collection("attendance").add({
+db.collection("attendance")
+.add({
 name:name,
 purpose:purpose,
 type:type,
@@ -255,16 +365,23 @@ time:new Date().toLocaleTimeString(),
 timestamp:Date.now()
 })
 .then(()=>{
-alert(type + " saved");
+
+alert(type+" saved");
+
 document.getElementById("purpose").value="";
+
 })
-.catch(err=>{
-alert("Error saving");
+.catch(()=>{
+
+alert("Save failed");
+
 });
 
 }
 
-// LIVE MARKERS
+// =====================================
+// LIVE PINS
+// =====================================
 db.collection("attendance")
 .orderBy("timestamp")
 .onSnapshot(snapshot=>{
@@ -272,14 +389,15 @@ db.collection("attendance")
 markers.forEach(m=>map.removeLayer(m));
 markers=[];
 
-let grouped = {};
+let grouped={};
 
 snapshot.forEach(doc=>{
 
-let d = doc.data();
+let d=doc.data();
 
 let key =
-d.lat.toFixed(5)+","+d.lon.toFixed(5);
+d.lat.toFixed(5)+","+
+d.lon.toFixed(5);
 
 if(!grouped[key]){
 grouped[key]=[];
@@ -289,38 +407,56 @@ grouped[key].push(d);
 
 });
 
-// CREATE MARKERS
 Object.keys(grouped).forEach(key=>{
 
-let logs = grouped[key];
+let logs=grouped[key];
 
-let lat = logs[0].lat;
-let lon = logs[0].lon;
+let lat=logs[0].lat;
+let lon=logs[0].lon;
 
-logs.sort((a,b)=>b.timestamp-a.timestamp);
+logs.sort((a,b)=>
+b.timestamp-a.timestamp
+);
 
-let html = "";
+let html="";
 
 logs.forEach(l=>{
 
 html += `
 <div class="popup-card">
-<b>${l.name}</b><br>
-${l.time}<br>
-<span class="tag ${l.type==='IN'?'in':'out'}">${l.type}</span>
-<div class="purpose">📌 ${l.purpose}</div>
+
+<div class="top">
+
+<div>
+<b>${l.name}</b>
+<div class="time">
+${l.time}
+</div>
+</div>
+
+<div class="tag ${l.type==='IN'?'tag-in':'tag-out'}">
+${l.type}
+</div>
+
+</div>
+
+<div class="purpose">
+📌 ${l.purpose}
+</div>
+
 </div>
 `;
 
 });
 
-let icon = L.divIcon({
+let icon=L.divIcon({
 html:`<div class="pin-box">📍 ${logs.length}</div>`,
 className:"",
 iconSize:[60,30]
 });
 
-let marker = L.marker([lat,lon],{icon:icon})
+let marker=
+L.marker([lat,lon],{icon})
 .addTo(map)
 .bindPopup(html);
 
