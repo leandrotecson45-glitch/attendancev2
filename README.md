@@ -1,185 +1,185 @@
-
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset='UTF-8'>
-<meta name='viewport' content='width=device-width,initial-scale=1.0'>
-<title>Field Portal</title>
-<style>body{font-family:Arial;background:#0f172a;color:#fff;padding:20px}input,select,textarea,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none}button{background:#16a34a;color:#fff;font-weight:bold}</style>
-</head>
-<body>
-<h2>Field Portal</h2>
-<select><option>Select Employee</option><option>Juan</option><option>Pedro</option></select>
-<textarea placeholder='Purpose'></textarea>
-<button>TIME IN</button>
-<button style='background:#dc2626'>TIME OUT</button>
-<p> <!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Field Portal</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-body{
+*{
 margin:0;
-font-family:system-ui,Arial;
-background:#0b1220;
-color:white;
-overflow:hidden;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
 }
 
-.app{
-display:flex;
-flex-direction:column;
-height:100dvh;
-}
-
-/* HEADER */
-.header{
-padding:12px;
+body{
 background:#0f172a;
-box-shadow:0 2px 8px rgba(0,0,0,.3);
+color:#fff;
 }
 
-.title{
-font-size:18px;
-font-weight:700;
-margin-bottom:10px;
+header{
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+background:#111827;
 }
 
-input, textarea{
+.container{
+padding:15px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+border-radius:14px;
+margin-bottom:15px;
+box-shadow:0 4px 10px rgba(0,0,0,.25);
+}
+
+label{
+display:block;
+margin-bottom:6px;
+font-size:14px;
+font-weight:bold;
+}
+
+select,input,textarea{
 width:100%;
 padding:12px;
 border:none;
 border-radius:10px;
-margin-bottom:8px;
+outline:none;
 font-size:14px;
+margin-bottom:12px;
 }
 
 textarea{
 resize:none;
-height:60px;
+height:70px;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+font-size:15px;
+font-weight:bold;
+color:#fff;
+cursor:pointer;
+margin-bottom:10px;
+}
+
+.btn-in{
+background:#16a34a;
+}
+
+.btn-out{
+background:#dc2626;
+}
+
+#map{
+height:420px;
+border-radius:14px;
+overflow:hidden;
+margin-top:10px;
 }
 
 .status{
 font-size:13px;
-opacity:.8;
+color:#cbd5e1;
+margin-top:5px;
 }
 
-/* MAP */
-#map{
-flex:1;
-}
-
-/* FOOTER BUTTONS */
-.controls{
-display:flex;
-gap:10px;
-padding:10px;
-background:#0f172a;
-}
-
-button{
-flex:1;
-padding:16px;
-border:none;
-border-radius:12px;
-font-size:15px;
-font-weight:700;
-color:white;
-}
-
-.in{background:#22c55e;}
-.out{background:#ef4444;}
-
-/* PIN */
-.pin{
+.pin-box{
 background:#111827;
 padding:6px 10px;
 border-radius:20px;
 font-size:12px;
 font-weight:bold;
-border:1px solid #374151;
+color:#fff;
+border:1px solid #334155;
 }
 
-/* POPUP */
-.popup-box{
-max-height:250px;
-overflow-y:auto;
-}
-
-.card{
-background:#1f2937;
+.popup-card{
+background:#111827;
 padding:10px;
-border-radius:12px;
+border-radius:10px;
 margin-bottom:8px;
-}
-
-.row{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:6px;
+color:#fff;
+font-size:13px;
 }
 
 .tag{
+display:inline-block;
+padding:4px 8px;
+border-radius:8px;
 font-size:11px;
-padding:3px 8px;
-border-radius:8px;
 font-weight:bold;
-}
-
-.inTag{background:#22c55e;}
-.outTag{background:#ef4444;}
-
-.purpose{
-padding:7px;
-background:#111827;
-border-left:3px solid #3b82f6;
-border-radius:8px;
-font-size:12px;
 margin-top:6px;
 }
 
-.time{
-font-size:12px;
-opacity:.7;
+.in{
+background:#16a34a;
 }
 
+.out{
+background:#dc2626;
+}
+
+.purpose{
+margin-top:8px;
+padding:8px;
+background:#1e293b;
+border-left:4px solid #38bdf8;
+border-radius:8px;
+font-size:12px;
+}
 </style>
 </head>
-
 <body>
 
-<div class="app">
+<header>📍 Field Portal</header>
 
-<div class="header">
-<div class="title">Field Portal</div>
+<div class="container">
 
-<input id="name" placeholder="Enter name">
+<div class="card">
 
-<textarea id="purpose" placeholder="Enter purpose"></textarea>
+<label>Select Employee</label>
+<select id="name">
+<option value="">Choose Employee</option>
+<option>Juan Dela Cruz</option>
+<option>Pedro Santos</option>
+<option>Maria Cruz</option>
+<option>Leandro Tecson</option>
+<option>Supervisor 1</option>
+</select>
 
-<div class="status" id="status">📡 Waiting GPS...</div>
+<label>Purpose</label>
+<textarea id="purpose" placeholder="Enter purpose here..."></textarea>
+
+<button class="btn-in" onclick="saveLog('IN')">🟢 TIME IN</button>
+<button class="btn-out" onclick="saveLog('OUT')">🔴 TIME OUT</button>
+
+<div class="status" id="status">Waiting for GPS...</div>
+
 </div>
 
 <div id="map"></div>
 
-<div class="controls">
-<button class="in" onclick="save('IN')">TIME IN</button>
-<button class="out" onclick="save('OUT')">TIME OUT</button>
 </div>
 
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 
-// FIREBASE
+// FIREBASE CONFIG
 const firebaseConfig = {
  apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
@@ -187,75 +187,104 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
+const db = firebase.firestore();
 
 // MAP
-const map=L.map('map').setView([15.5,120.9],15);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const map = L.map('map').setView([15.486,120.967],13);
 
-let lat=null, lon=null;
-let myMarker;
-let markers=[];
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map);
 
-// GPS
+let userLat = null;
+let userLng = null;
+let myMarker = null;
+let markers = [];
+
+// GPS WATCH
 navigator.geolocation.watchPosition(pos=>{
 
-lat=pos.coords.latitude;
-lon=pos.coords.longitude;
+userLat = pos.coords.latitude;
+userLng = pos.coords.longitude;
 
-document.getElementById("status").innerText="📍 GPS Ready";
+document.getElementById("status").innerText =
+"GPS Ready";
 
-if(myMarker) map.removeLayer(myMarker);
+if(myMarker){
+map.removeLayer(myMarker);
+}
 
-myMarker=L.marker([lat,lon]).addTo(map)
-.bindPopup("📍 You are here");
+myMarker = L.marker([userLat,userLng]).addTo(map)
+.bindPopup("You are here");
 
-map.setView([lat,lon],17);
+map.setView([userLat,userLng],16);
 
-},()=>{
-document.getElementById("status").innerText="❌ Enable GPS";
+},err=>{
+document.getElementById("status").innerText =
+"Enable GPS Permission";
 });
 
-// SAVE
-async function save(type){
+// SAVE LOG
+function saveLog(type){
 
-const name=document.getElementById("name").value.trim();
-const purpose=document.getElementById("purpose").value.trim();
+const name = document.getElementById("name").value;
+const purpose = document.getElementById("purpose").value.trim();
 
-if(!name || !purpose || !lat){
-alert("Complete name, purpose and GPS");
+if(!name){
+alert("Select employee name");
 return;
 }
 
-await db.collection("attendance").add({
-name,
-purpose,
-type,
-lat,
-lon,
+if(!purpose){
+alert("Enter purpose");
+return;
+}
+
+if(userLat===null){
+alert("Waiting for GPS");
+return;
+}
+
+db.collection("attendance").add({
+name:name,
+purpose:purpose,
+type:type,
+lat:userLat,
+lon:userLng,
 time:new Date().toLocaleTimeString(),
 timestamp:Date.now()
+})
+.then(()=>{
+alert(type + " saved");
+document.getElementById("purpose").value="";
+})
+.catch(err=>{
+alert("Error saving");
 });
-
-alert(type+" saved");
 
 }
 
-// LIVE PINS
-db.collection("attendance").orderBy("timestamp")
+// LIVE MARKERS
+db.collection("attendance")
+.orderBy("timestamp")
 .onSnapshot(snapshot=>{
 
 markers.forEach(m=>map.removeLayer(m));
 markers=[];
 
-let grouped={};
+let grouped = {};
 
 snapshot.forEach(doc=>{
 
-let d=doc.data();
-let key=d.lat.toFixed(5)+","+d.lon.toFixed(5);
+let d = doc.data();
 
-if(!grouped[key]) grouped[key]=[];
+let key =
+d.lat.toFixed(5)+","+d.lon.toFixed(5);
+
+if(!grouped[key]){
+grouped[key]=[];
+}
+
 grouped[key].push(d);
 
 });
@@ -263,46 +292,35 @@ grouped[key].push(d);
 // CREATE MARKERS
 Object.keys(grouped).forEach(key=>{
 
-let logs=grouped[key];
-let lat=logs[0].lat;
-let lon=logs[0].lon;
+let logs = grouped[key];
+
+let lat = logs[0].lat;
+let lon = logs[0].lon;
 
 logs.sort((a,b)=>b.timestamp-a.timestamp);
 
-let html=`<div class="popup-box">`;
+let html = "";
 
 logs.forEach(l=>{
 
-let tag=l.type==="IN"?"inTag":"outTag";
-
-html+=`
-<div class="card">
-
-<div class="row">
-<b>${l.name}</b>
-<div class="tag ${tag}">${l.type}</div>
-</div>
-
-<div class="time">${l.time}</div>
-
-<div class="purpose">
-📌 ${l.purpose || "No purpose"}
-</div>
-
+html += `
+<div class="popup-card">
+<b>${l.name}</b><br>
+${l.time}<br>
+<span class="tag ${l.type==='IN'?'in':'out'}">${l.type}</span>
+<div class="purpose">📌 ${l.purpose}</div>
 </div>
 `;
 
 });
 
-html+=`</div>`;
-
-let icon=L.divIcon({
-html:`<div class="pin">📍 ${logs.length}</div>`,
+let icon = L.divIcon({
+html:`<div class="pin-box">📍 ${logs.length}</div>`,
 className:"",
 iconSize:[60,30]
 });
 
-let marker=L.marker([lat,lon],{icon})
+let marker = L.marker([lat,lon],{icon:icon})
 .addTo(map)
 .bindPopup(html);
 
@@ -313,8 +331,5 @@ markers.push(marker);
 });
 
 </script>
-
-</body>
-</html></p>
 </body>
 </html>
