@@ -194,12 +194,60 @@ padding:13px;
 }
 }
 </style>
+  <style>
+
+header{
+background:#111827;
+padding:14px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+font-size:22px;
+font-weight:700;
+color:#fff;
+}
+
+.logo{
+width:80px;
+height:80px;
+object-fit:contain;
+border-radius:10px;
+background:#fff;
+padding:2px;
+box-shadow:0 4px 10px rgba(0,0,0,.25);
+}
+
+.title-wrap{
+display:flex;
+flex-direction:column;
+line-height:1.1;
+}
+
+.subtxt{
+font-size:11px;
+font-weight:400;
+color:#94a3b8;
+}
+
+</style>
 </head>
 <body>
 
 <div class="app">
 
-<header>FIELDSUPERVISOR ATTENDANCE</header>
+<header>
+
+<img
+src="https://i.postimg.cc/bvJLR3N1/ostrom-climate-solutions-inc-logo.jpg"
+class="logo">
+
+<div class="title-wrap">
+<div>FIELDSUPERVISOR ATTENDANCE</div>
+<div class="subtxt">Attendance & GPS Tracking</div>
+</div>
+
+</header>
 
 <div class="panel">
 
