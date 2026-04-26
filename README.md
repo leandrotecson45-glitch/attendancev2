@@ -300,7 +300,7 @@ Waiting GPS...
 const firebaseConfig = {
 apiKey: "AIzaSyDZ2YOn7k1h5kSUppZcWfZ5gAvJlaOVVuA",
   authDomain: "attendance1-697b2.firebaseapp.com",
-  projectId: "attendance1-697b2"
+  projectId: "attendance1-697b2",
 };
 
 firebase.initializeApp(firebaseConfig);
