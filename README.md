@@ -92,7 +92,7 @@ background:darkred;
 /* STATUS */
 .status{
 font-size:13px;
-color:#cbd5e1;
+color:BLACK;
 }
 
 /* MAP */
